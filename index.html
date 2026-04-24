@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manufacturing Tool Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --green: #16a34a;
+      --orange: #f59e0b;
+      --red: #dc2626;
+      --purple: #7c3aed;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", "Kanit", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: #0f172a;
+      color: #fff;
+      padding: 24px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      padding: 0 6px;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .brand h1 {
+      font-size: 17px;
+      line-height: 1.2;
+    }
+
+    .brand p {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 3px;
+    }
+
+    .menu {
+      display: grid;
+      gap: 8px;
+    }
+
+    .menu button {
+      border: 0;
+      background: transparent;
+      color: #cbd5e1;
+      padding: 12px 14px;
+      border-radius: 14px;
+      text-align: left;
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: 0.2s;
+    }
+
+    .menu button:hover,
+    .menu button.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .main {
+      padding: 28px;
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+
+    .title-block h2 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .title-block p {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 14px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search {
+      width: 280px;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .btn {
+      border: 0;
+      background: var(--primary);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-family: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn.secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .kpi {
+      padding: 18px;
+    }
+
+    .kpi .label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .kpi .value {
+      font-size: 30px;
+      font-weight: 800;
+      margin-top: 10px;
+      letter-spacing: -0.04em;
+    }
+
+    .kpi .note {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 0.9fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .card-header {
+      padding: 18px 18px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-header h3 {
+      font-size: 17px;
+    }
+
+    .card-header span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .chart-wrap {
+      padding: 12px 18px 18px;
+      height: 300px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      padding: 0 18px 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th, td {
+      padding: 13px 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 700;
+      background: #f9fafb;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .available { background: #dcfce7; color: #166534; }
+    .inuse { background: #dbeafe; color: #1d4ed8; }
+    .repair { background: #fef3c7; color: #92400e; }
+    .ng { background: #fee2e2; color: #991b1b; }
+    .scrap { background: #e5e7eb; color: #374151; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      padding: 18px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field label {
+      font-size: 13px;
+      color: #374151;
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      padding: 12px 13px;
+      font-family: inherit;
+      outline: none;
+      background: #fff;
+      width: 100%;
+    }
+
+    .field textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .form-actions {
+      padding: 0 18px 18px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .alert-list {
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .alert-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #f9fafb;
+      border: 1px solid var(--line);
+    }
+
+    .alert-item strong {
+      font-size: 14px;
+    }
+
+    .alert-item p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .qr-box {
+      padding: 22px;
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .qr-demo {
+      width: 150px;
+      height: 150px;
+      border-radius: 18px;
+      background:
+        linear-gradient(90deg, #111827 10px, transparent 10px) 0 0 / 30px 30px,
+        linear-gradient(#111827 10px, transparent 10px) 0 0 / 30px 30px,
+        #fff;
+      border: 10px solid #fff;
+      box-shadow: 0 10px 25px rgba(15,23,42,0.12);
+    }
+
+    .mobile-menu {
+      display: none;
+    }
+
+    .mode-badge {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      padding: 6px 10px;
+      margin-bottom: 8px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .login-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.58);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 99;
+      padding: 20px;
+    }
+
+    .login-modal.active {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .login-card {
+      position: relative;
+      width: min(480px, 100%);
+      background: #fff;
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 30px 80px rgba(15, 23, 42, 0.28);
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #111827;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .login-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #dbeafe, #ede9fe);
+      font-size: 26px;
+      margin-bottom: 16px;
+    }
+
+    .login-card h3 {
+      font-size: 24px;
+      letter-spacing: -0.03em;
+    }
+
+    .login-card p {
+      color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .role-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .role-grid button {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 18px;
+      padding: 16px;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      transition: 0.2s;
+    }
+
+    .role-grid button:hover {
+      border-color: #93c5fd;
+      background: #eff6ff;
+      transform: translateY(-1px);
+    }
+
+    .role-grid strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .role-grid span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .demo-note {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #f9fafb;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .hidden-by-role {
+      display: none !important;
+    }
+
+    .access-banner {
+      display: none;
+      margin-bottom: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1px solid #fed7aa;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .access-banner.active {
+      display: block;
+    }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .mobile-menu { display: flex; gap: 8px; overflow: auto; margin-bottom: 18px; }
+      .mobile-menu button { flex: 0 0 auto; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .dashboard-grid, .two-col { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .search { width: 100%; }
+      .top-actions { width: 100%; }
+    }
+
+    @media (max-width: 640px) {
+      .main { padding: 18px; }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .top-actions { flex-direction: column; align-items: stretch; }
+      .btn { width: 100%; }
+      .qr-box { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">TT</div>
+        <div>
+          <h1>Tool Tracker</h1>
+          <p>Manufacturing System</p>
+        </div>
+      </div>
+
+      <nav class="menu">
+        <button class="active" data-section="dashboard" data-roles="Demo,Engineer,Admin">📊 Dashboard</button>
+        <button data-section="master" data-roles="Admin">🧰 Tool Master</button>
+        <button data-section="tracking" data-roles="Demo,Operator,Admin">📍 Tracking</button>
+        <button data-section="usage" data-roles="Demo,Operator,Engineer,Admin">⏱️ Usage History</button>
+        <button data-section="maintenance" data-roles="Engineer,Admin">🛠️ Maintenance</button>
+        <button data-section="failure" data-roles="Engineer,Admin">🚨 Failure / NG</button>
+        <button data-section="inventory" data-roles="Admin">📦 Inventory</button>
+        <button data-section="label" data-roles="Demo,Operator,Admin">🏷️ QR / Label</button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="mobile-menu">
+        <button class="btn secondary" data-section="dashboard" data-roles="Demo,Engineer,Admin">Dashboard</button>
+        <button class="btn secondary" data-section="master" data-roles="Admin">Master</button>
+        <button class="btn secondary" data-section="tracking" data-roles="Demo,Operator,Admin">Tracking</button>
+        <button class="btn secondary" data-section="usage" data-roles="Demo,Operator,Engineer,Admin">Usage</button>
+        <button class="btn secondary" data-section="maintenance" data-roles="Engineer,Admin">Maintenance</button>
+        <button class="btn secondary" data-section="failure" data-roles="Engineer,Admin">Failure</button>
+        <button class="btn secondary" data-section="inventory" data-roles="Admin">Inventory</button>
+        <button class="btn secondary" data-section="label" data-roles="Demo,Operator,Admin">QR</button>
+      </div>
+
+      <header class="topbar">
+        <div class="title-block">
+          <div class="mode-badge" id="modeBadge">Demo Mode</div>
+          <h2 id="pageTitle">Manufacturing Tool Tracker</h2>
+          <p>ระบบจัดการ Tool, อายุการใช้งาน, PM, NG และ Inventory สำหรับโรงงาน</p>
+        </div>
+        <div class="top-actions">
+          <input class="search" id="globalSearch" placeholder="Search Tool ID, Name, Machine..." />
+          <button class="btn secondary" id="loginBtn" onclick="openLogin()">Switch Role</button>
+          <button class="btn" onclick="showSection('master')">+ Add Tool</button>
+        </div>
+      </header>
+
+      <div class="login-modal" id="loginModal">
+        <div class="login-card">
+          <button class="close-btn" onclick="closeLogin()">×</button>
+          <div class="login-icon">🔐</div>
+          <h3>Role Access</h3>
+          <p>เลือกบทบาทเพื่อจำลองสิทธิ์การใช้งานในระบบโรงงาน</p>
+
+          <div class="role-grid">
+            <button onclick="loginAs('Operator')">
+              <strong>Operator</strong>
+              <span>กรอก Usage / Scan Tool</span>
+            </button>
+            <button onclick="loginAs('Engineer')">
+              <strong>Engineer</strong>
+              <span>ดู Dashboard / Analyze NG</span>
+            </button>
+            <button onclick="loginAs('Admin')">
+              <strong>Admin</strong>
+              <span>จัดการ Master / Inventory</span>
+            </button>
+          </div>
+
+          <div class="demo-note">Portfolio demo: ใช้ role-based access เพื่อจำลองสิทธิ์จริงในโรงงาน</div>
+        </div>
+      </div>
+
+      <div class="access-banner" id="accessBanner">คุณไม่มีสิทธิ์เข้าหน้านี้ กรุณา Switch Role เป็นสิทธิ์ที่เหมาะสม</div>
+
+      <section id="dashboard" class="section active">
+        <div class="kpi-grid">
+          <div class="card kpi">
+            <div class="label">Total Tools</div>
+            <div class="value">128</div>
+            <div class="note">All registered tools</div>
+          </div>
+          <div class="card kpi">
+            <div class="label">Available</div>
+            <div class="value" style="color:var(--green)">76</div>
+            <div class="note">Ready for production</div>
+          </div>
+          <div class="card kpi">
+            <div class="label">In Use</div>
+            <div class="value" style="color:var(--primary)">34</div>
+            <div class="note">Assigned to line</div>
+          </div>
+          <div class="card kpi">
+            <div class="label">Repair / NG</div>
+            <div class="value" style="color:var(--red)">12</div>
+            <div class="note">Need action</div>
+          </div>
+          <div class="card kpi">
+            <div class="label">PM Due</div>
+            <div class="value" style="color:var(--orange)">6</div>
+            <div class="note">Within 7 days</div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Tool Status Overview</h3>
+                <span>Available / In use / Repair / NG / Scrap</span>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="statusChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Maintenance Alerts</h3>
+                <span>Next due and urgent items</span>
+              </div>
+            </div>
+            <div class="alert-list">
+              <div class="alert-item">
+                <div>
+                  <strong>TL-0007 Die Set A</strong>
+                  <p>PM due in 2 days • Grid Line 1</p>
+                </div>
+                <span class="badge repair">Due</span>
+              </div>
+              <div class="alert-item">
+                <div>
+                  <strong>TL-0012 Jig Holder</strong>
+                  <p>Usage reached 92% • Pasting</p>
+                </div>
+                <span class="badge ng">Risk</span>
+              </div>
+              <div class="alert-item">
+                <div>
+                  <strong>TL-0021 Mold B</strong>
+                  <p>Available qty below safety stock</p>
+                </div>
+                <span class="badge repair">Low</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3>Recent Tool Records</h3>
+              <span>ข้อมูลตัวอย่างสำหรับ Portfolio</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tool ID</th>
+                  <th>Tool Name</th>
+                  <th>Type</th>
+                  <th>Process</th>
+                  <th>Machine</th>
+                  <th>Status</th>
+                  <th>Remaining Life</th>
+                  <th>Location</th>
+                </tr>
+              </thead>
+              <tbody id="toolTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="master" class="section">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3>Tool Master Data</h3>
+              <span>ข้อมูลหลักของ Tool ใช้เป็นหัวใจของระบบ</span>
+            </div>
+          </div>
+          <form class="form-grid" id="toolForm">
+            <div class="field">
+              <label>Tool ID</label>
+              <input required placeholder="เช่น TL-0001" />
+            </div>
+            <div class="field">
+              <label>Tool Name / Description</label>
+              <input required placeholder="เช่น Grid Die Set A" />
+            </div>
+            <div class="field">
+              <label>Tool Type</label>
+              <select>
+                <option>Die</option>
+                <option>Mold</option>
+                <option>Jig</option>
+                <option>Fixture</option>
+                <option>Cutting Tool</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Part No.</label>
+              <input placeholder="Part number ที่ใช้ร่วม" />
+            </div>
+            <div class="field">
+              <label>Process</label>
+              <select>
+                <option>Grid</option>
+                <option>Pasting</option>
+                <option>Assembly</option>
+                <option>Formation</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Machine</label>
+              <input placeholder="เช่น Machine G-01" />
+            </div>
+            <div class="field">
+              <label>Supplier / Maker</label>
+              <input placeholder="Supplier name" />
+            </div>
+            <div class="field">
+              <label>Material</label>
+              <input placeholder="เช่น SKD11, SUS304" />
+            </div>
+            <div class="field">
+              <label>Drawing No. / Revision</label>
+              <input placeholder="DWG-001 / Rev.02" />
+            </div>
+            <div class="field full">
+              <label>Remark</label>
+              <textarea placeholder="รายละเอียดเพิ่มเติม"></textarea>
+            </div>
+          </form>
+          <div class="form-actions">
+            <button class="btn secondary" type="button">Clear</button>
+            <button class="btn" type="button">Save Tool</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="tracking" class="section">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><h3>Status & Location Tracking</h3></div>
+            <div class="form-grid" style="grid-template-columns:1fr 1fr">
+              <div class="field"><label>Tool ID</label><input placeholder="TL-0001"></div>
+              <div class="field"><label>Current Status</label><select><option>Available</option><option>In use</option><option>Repair</option><option>NG</option><option>Scrap</option></select></div>
+              <div class="field"><label>Location</label><input placeholder="Line / Area / Rack / Shelf"></div>
+              <div class="field"><label>Assigned Machine / Line</label><input placeholder="Line 1 / Machine G-01"></div>
+              <div class="field"><label>Last Seen Date</label><input type="date"></div>
+              <div class="field"><label>Updated By</label><input placeholder="Operator / Engineer"></div>
+            </div>
+            <div class="form-actions"><button class="btn">Update Status</button></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Life Management</h3></div>
+            <div class="form-grid" style="grid-template-columns:1fr 1fr">
+              <div class="field"><label>Tool Life Unit</label><select><option>Cycle</option><option>Shot</option><option>Hour</option></select></div>
+              <div class="field"><label>Max Life</label><input type="number" placeholder="10000"></div>
+              <div class="field"><label>Current Usage</label><input type="number" placeholder="6500"></div>
+              <div class="field"><label>Remaining Life %</label><input placeholder="35%" disabled></div>
+              <div class="field"><label>Last Used Date</label><input type="date"></div>
+              <div class="field"><label>Risk Level</label><select><option>Normal</option><option>Warning</option><option>Critical</option></select></div>
+            </div>
+            <div class="form-actions"><button class="btn">Save Usage</button></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="usage" class="section">
+        <div class="card">
+          <div class="card-header"><h3>Usage History</h3><span>Trace machine, lot, operator and result</span></div>
+          <div class="table-wrap" style="padding-top:18px">
+            <table>
+              <thead><tr><th>Date</th><th>Tool ID</th><th>Machine</th><th>Lot No.</th><th>Operator</th><th>Cycle Used</th><th>Result</th></tr></thead>
+              <tbody>
+                <tr><td>2026-04-22</td><td>TL-0001</td><td>G-01</td><td>LOT-260422-A</td><td>Somchai</td><td>1,200</td><td><span class="badge available">OK</span></td></tr>
+                <tr><td>2026-04-23</td><td>TL-0007</td><td>P-02</td><td>LOT-260423-B</td><td>Arisa</td><td>980</td><td><span class="badge ng">NG</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="maintenance" class="section">
+        <div class="card">
+          <div class="card-header"><h3>Maintenance Plan</h3><span>PM / CM schedule and repair details</span></div>
+          <div class="form-grid">
+            <div class="field"><label>Tool ID</label><input placeholder="TL-0001"></div>
+            <div class="field"><label>Maintenance Type</label><select><option>PM</option><option>CM</option></select></div>
+            <div class="field"><label>Schedule</label><input placeholder="Every 10,000 shot"></div>
+            <div class="field"><label>Last Maintenance Date</label><input type="date"></div>
+            <div class="field"><label>Next Due Date</label><input type="date"></div>
+            <div class="field"><label>Performed By</label><input placeholder="Technician name"></div>
+            <div class="field full"><label>Repair / Maintenance Detail</label><textarea placeholder="รายละเอียดการบำรุงรักษา / การซ่อม"></textarea></div>
+          </div>
+          <div class="form-actions"><button class="btn">Save Maintenance</button></div>
+        </div>
+      </section>
+
+      <section id="failure" class="section">
+        <div class="card">
+          <div class="card-header"><h3>Failure / NG Record</h3><span>Root cause, action and downtime tracking</span></div>
+          <div class="form-grid">
+            <div class="field"><label>Tool ID</label><input placeholder="TL-0001"></div>
+            <div class="field"><label>Failure Type</label><input placeholder="Crack / Wear / Broken / Dimension NG"></div>
+            <div class="field"><label>Downtime (minutes)</label><input type="number" placeholder="45"></div>
+            <div class="field full"><label>Root Cause</label><textarea placeholder="5 Why / Fishbone summary"></textarea></div>
+            <div class="field full"><label>Action Taken</label><textarea placeholder="Corrective action / Preventive action"></textarea></div>
+            <div class="field full"><label>Image Attachment</label><input type="file"></div>
+          </div>
+          <div class="form-actions"><button class="btn">Save NG Record</button></div>
+        </div>
+      </section>
+
+      <section id="inventory" class="section">
+        <div class="card">
+          <div class="card-header"><h3>Inventory Control</h3><span>Stock, safety stock and min/max level</span></div>
+          <div class="table-wrap" style="padding-top:18px">
+            <table>
+              <thead><tr><th>Tool ID</th><th>Tool Name</th><th>Total Qty</th><th>Available Qty</th><th>Safety Stock</th><th>Min Level</th><th>Max Level</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>TL-0001</td><td>Grid Die Set A</td><td>8</td><td>5</td><td>3</td><td>2</td><td>10</td><td><span class="badge available">Normal</span></td></tr>
+                <tr><td>TL-0021</td><td>Mold B</td><td>4</td><td>1</td><td>2</td><td>2</td><td>8</td><td><span class="badge repair">Low Stock</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="label" class="section">
+        <div class="card qr-box">
+          <div class="qr-demo"></div>
+          <div>
+            <h3>QR / Barcode Identification</h3>
+            <p style="color:var(--muted); margin:10px 0 16px; line-height:1.7">
+              ใช้สำหรับติดที่ Tool เพื่อป้องกันใช้ผิด และสแกนเพื่อดูสถานะ, Location, Life, PM และประวัติ NG ได้ทันที
+            </p>
+            <div class="form-grid" style="grid-template-columns:1fr 1fr; padding:0">
+              <div class="field"><label>Tool ID</label><input value="TL-0001"></div>
+              <div class="field"><label>Label Status</label><select><option>Available</option><option>Missing</option><option>Damaged</option></select></div>
+              <div class="field"><label>Tag Status</label><select><option>OK Tag</option><option>NG Tag</option></select></div>
+              <div class="field"><label>Storage Condition</label><input placeholder="Dry area / Rack A"></div>
+            </div>
+            <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap">
+              <button class="btn">Generate QR</button>
+              <button class="btn secondary">Print Label</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const tools = [
+      { id: 'TL-0001', name: 'Grid Die Set A', type: 'Die', process: 'Grid', machine: 'G-01', status: 'Available', life: '72%', location: 'Rack A-01' },
+      { id: 'TL-0007', name: 'Pasting Jig Holder', type: 'Jig', process: 'Pasting', machine: 'P-02', status: 'Repair', life: '18%', location: 'Repair Area' },
+      { id: 'TL-0012', name: 'Cutting Blade 45mm', type: 'Cutting Tool', process: 'Cutting', machine: 'C-03', status: 'In use', life: '41%', location: 'Line 2' },
+      { id: 'TL-0021', name: 'Mold B', type: 'Mold', process: 'Assembly', machine: 'A-01', status: 'NG', life: '8%', location: 'QA Hold' },
+      { id: 'TL-0035', name: 'Fixture Check Plate', type: 'Fixture', process: 'Inspection', machine: '-', status: 'Available', life: '89%', location: 'Shelf B-04' }
+    ];
+
+    let currentRole = 'Demo';
+
+    const roleHome = {
+      Demo: 'dashboard',
+      Operator: 'tracking',
+      Engineer: 'dashboard',
+      Admin: 'dashboard'
+    };
+
+    const roleDescriptions = {
+      Demo: 'ดูภาพรวมตัวอย่าง ไม่ต้อง login',
+      Operator: 'กรอก Usage, อัปเดต Tracking, ใช้ QR/Label',
+      Engineer: 'ดู Dashboard, วิเคราะห์ NG, จัดการ Maintenance',
+      Admin: 'เข้าถึงทุกหน้า และแก้ไข Master / Inventory'
+    };
+
+    function openLogin() {
+      document.getElementById('loginModal').classList.add('active');
+    }
+
+    function closeLogin() {
+      document.getElementById('loginModal').classList.remove('active');
+    }
+
+    function canAccess(sectionId, role = currentRole) {
+      const navItem = document.querySelector(`[data-section="${sectionId}"][data-roles]`);
+      if (!navItem) return true;
+      return navItem.dataset.roles.split(',').includes(role);
+    }
+
+    function applyRoleAccess() {
+      document.querySelectorAll('[data-roles]').forEach(item => {
+        const allowedRoles = item.dataset.roles.split(',');
+        item.classList.toggle('hidden-by-role', !allowedRoles.includes(currentRole));
+      });
+    }
+
+    function showAccessBanner() {
+      const banner = document.getElementById('accessBanner');
+      banner.classList.add('active');
+      setTimeout(() => banner.classList.remove('active'), 2600);
+    }
+
+    function loginAs(role) {
+      currentRole = role;
+      const badge = document.getElementById('modeBadge');
+      const loginBtn = document.getElementById('loginBtn');
+
+      badge.textContent = `${role} Mode`;
+      badge.title = roleDescriptions[role];
+      badge.style.background = role === 'Admin' ? '#ede9fe' : role === 'Engineer' ? '#dbeafe' : role === 'Operator' ? '#dcfce7' : '#e0f2fe';
+      badge.style.color = role === 'Admin' ? '#5b21b6' : role === 'Engineer' ? '#1d4ed8' : role === 'Operator' ? '#166534' : '#0369a1';
+      loginBtn.textContent = `Role: ${role}`;
+
+      applyRoleAccess();
+      closeLogin();
+      showSection(roleHome[role]);
+    }
+
+    document.getElementById('loginModal').addEventListener('click', (event) => {
+      if (event.target.id === 'loginModal') closeLogin();
+    });
+
+    function statusClass(status) {
+      const map = {
+        'Available': 'available',
+        'In use': 'inuse',
+        'Repair': 'repair',
+        'NG': 'ng',
+        'Scrap': 'scrap'
+      };
+      return map[status] || 'available';
+    }
+
+    function renderTable(data = tools) {
+      const tbody = document.getElementById('toolTableBody');
+      tbody.innerHTML = data.map(tool => `
+        <tr>
+          <td><strong>${tool.id}</strong></td>
+          <td>${tool.name}</td>
+          <td>${tool.type}</td>
+          <td>${tool.process}</td>
+          <td>${tool.machine}</td>
+          <td><span class="badge ${statusClass(tool.status)}">${tool.status}</span></td>
+          <td>${tool.life}</td>
+          <td>${tool.location}</td>
+        </tr>
+      `).join('');
+    }
+
+    function showSection(sectionId) {
+      if (!canAccess(sectionId)) {
+        showAccessBanner();
+        showSection(roleHome[currentRole]);
+        return;
+      }
+
+      document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active');
+
+      document.querySelectorAll('[data-section]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.section === sectionId);
+      });
+
+      const titles = {
+        dashboard: 'Manufacturing Tool Tracker',
+        master: 'Tool Master Data',
+        tracking: 'Status & Life Tracking',
+        usage: 'Usage History',
+        maintenance: 'Maintenance Plan',
+        failure: 'Failure / NG Record',
+        inventory: 'Inventory Control',
+        label: 'QR / Label Identification'
+      };
+      document.getElementById('pageTitle').textContent = titles[sectionId] || 'Manufacturing Tool Tracker';
+    }
+
+    document.querySelectorAll('[data-section]').forEach(btn => {
+      btn.addEventListener('click', () => showSection(btn.dataset.section));
+    });
+
+    document.getElementById('globalSearch').addEventListener('input', (e) => {
+      const keyword = e.target.value.toLowerCase();
+      const filtered = tools.filter(tool =>
+        Object.values(tool).some(value => String(value).toLowerCase().includes(keyword))
+      );
+      renderTable(filtered);
+      showSection('dashboard');
+    });
+
+    renderTable();
+    applyRoleAccess();
+
+    const ctx = document.getElementById('statusChart');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Available', 'In Use', 'Repair', 'NG', 'Scrap'],
+        datasets: [{
+          label: 'Tools',
+          data: [76, 34, 8, 4, 6],
+          borderRadius: 12,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: '#eef2f7' }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
