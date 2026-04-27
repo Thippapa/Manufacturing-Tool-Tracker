@@ -15,7 +15,7 @@ https://thippapa.github.io/Manufacturing-Tool-Tracker/
 - HTML
 
 ## 📸 Screenshots
-(Add your UI screenshot here)
+<img width="1909" height="982" alt="image" src="https://github.com/user-attachments/assets/e48b8b84-b237-4f9d-b86c-1027b5dfa88a" />
 
 ## Author
 Thippapa Nakwijit
