@@ -13,8 +13,6 @@ https://thippapa.github.io/Manufacturing-Tool-Tracker/
 
 ## Tech Stack
 - HTML
-- CSS
-- JavaScript
 
 ## 📸 Screenshots
 (Add your UI screenshot here)
